@@ -1,0 +1,235 @@
+{
+  "project_name": "Catering & Small Business Pre-Accounting SaaS (Ön Muhasebe Admin Panel)",
+  "first_tenant": "Ecrin Yemek Catering",
+  "archetype": "ORGANIC_EARTHY_AND_PERFORMANCE_PRO",
+  "theme": {
+    "default_mode": "light",
+    "supports_dark_mode": true,
+    "dark_mode_class": "dark"
+  },
+  "typography": {
+    "font_family_heading": "'Outfit', 'Plus Jakarta Sans', sans-serif",
+    "font_family_body": "'DM Sans', 'Inter', -apple-system, sans-serif",
+    "font_family_mono": "'JetBrains Mono', 'IBM Plex Mono', monospace",
+    "scale": {
+      "h1": "text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight",
+      "h2": "text-2xl sm:text-3xl font-semibold tracking-tight",
+      "h3": "text-xl sm:text-2xl font-semibold",
+      "h4": "text-lg font-medium",
+      "body": "text-sm sm:text-base leading-relaxed text-slate-700 dark:text-slate-300",
+      "small": "text-xs font-medium text-slate-500 dark:text-slate-400",
+      "financial_num": "font-mono font-semibold tracking-tight"
+    }
+  },
+  "colors": {
+    "primary": {
+      "DEFAULT": "#0D9488",
+      "hover": "#0F766E",
+      "active": "#115E59",
+      "light": "#CCFBF1",
+      "foreground": "#FFFFFF"
+    },
+    "secondary": {
+      "DEFAULT": "#1E293B",
+      "hover": "#0F172A",
+      "foreground": "#F8FAFC"
+    },
+    "accent": {
+      "DEFAULT": "#F59E0B",
+      "light": "#FEF3C7",
+      "foreground": "#78350F"
+    },
+    "success": {
+      "DEFAULT": "#10B981",
+      "light": "#D1FAE5",
+      "foreground": "#065F46"
+    },
+    "destructive": {
+      "DEFAULT": "#E11D48",
+      "light": "#FFE4E6",
+      "foreground": "#881337"
+    },
+    "background": {
+      "light": "#F8FAFC",
+      "dark": "#090D16",
+      "card_light": "#FFFFFF",
+      "card_dark": "#111827",
+      "sidebar_light": "#0F172A",
+      "sidebar_dark": "#0B0F19"
+    },
+    "border": {
+      "light": "#E2E8F0",
+      "dark": "#1E293B",
+      "active": "#0D9488"
+    }
+  },
+  "layout_strategy": {
+    "structure": "Collapsible Left Sidebar + Sticky Topbar + Dynamic Breadcrumbs + Main Content Grid",
+    "sidebar": {
+      "desktop_width": "w-64",
+      "collapsed_width": "w-20",
+      "mobile_overlay": "Sheet / Drawer sliding from left",
+      "sections": [
+        {
+          "title_tr": "GENEL",
+          "title_en": "GENERAL",
+          "items": ["Dashboard", "Belge Merkezi / Documents"]
+        },
+        {
+          "title_tr": "ÖN MUHASEBE & OPERASYON",
+          "title_en": "PRE-ACCOUNTING & OPS",
+          "items": ["Fatura & İrsaliye", "Siparişler & Menü", "Cari Hesaplar"]
+        },
+        {
+          "title_tr": "FİRMA & YÖNETİM",
+          "title_en": "ORGANIZATION",
+          "items": ["Firma Ayarları", "Kullanıcılar", "Roller & Yetkiler", "Modül Yönetimi"]
+        },
+        {
+          "title_tr": "GÜVENLİK & SİSTEM",
+          "title_en": "SECURITY & SYSTEM",
+          "items": ["Güvenlik / MFA", "Audit Log (Denetim Kaydı)"]
+        },
+        {
+          "title_tr": "SUPER ADMIN",
+          "title_en": "SUPER ADMIN",
+          "items": ["Kiracı Listesi (Tenants)", "Sistem Sağlığı"]
+        }
+      ]
+    },
+    "topbar": {
+      "height": "h-16",
+      "elements": [
+        "Sidebar Toggle",
+        "Tenant Switcher Badge (Ecrin Yemek / Enterprise)",
+        "Global Search (Ctrl+K)",
+        "Language Toggle (TR/EN)",
+        "Theme Switcher (Light/Dark)",
+        "Notifications Bell with indicator",
+        "User Profile Menu (Avatar + Role + Logout)"
+      ]
+    }
+  },
+  "pages_breakdown": [
+    {
+      "id": "login",
+      "name_tr": "Giriş Yap",
+      "name_en": "Login",
+      "route": "/login",
+      "description": "Multi-tenant login view with email, password, remember me, language toggle, and tenant context visual indicator for Ecrin Yemek."
+    },
+    {
+      "id": "mfa",
+      "name_tr": "MFA Doğrulama",
+      "name_en": "MFA Verification",
+      "route": "/mfa",
+      "description": "6-digit OTP verification card with countdown timer, backup code fallback, and QR code setup modal."
+    },
+    {
+      "id": "dashboard",
+      "name_tr": "Ön Muhasebe & Catering Dashboard",
+      "name_en": "Dashboard",
+      "route": "/dashboard",
+      "description": "Financial KPIs (Gelir, Gider, Net Kar, Bekleyen Siparişler), Cash Flow Recharts AreaChart, Recent Invoices Table, Daily Catering Delivery Schedule, Quick Action Buttons."
+    },
+    {
+      "id": "tenant_settings",
+      "name_tr": "Firma Ayarları",
+      "name_en": "Tenant Settings",
+      "route": "/settings/tenant",
+      "description": "Company profile form (Ecrin Yemek Catering A.Ş.), Tax Office/No (Vergi Dairesi/No), Logo Uploader, Invoice Defaults, Currency (TRY/EUR/USD), Address & Contact."
+    },
+    {
+      "id": "user_management",
+      "name_tr": "Kullanıcı Yönetimi",
+      "name_en": "User Management",
+      "route": "/users",
+      "description": "Data Table with User search, Role badge, Status toggle, Mobile phone for field staff, 'Yeni Kullanıcı Davet Et' Modal, Edit/Delete dialogs."
+    },
+    {
+      "id": "roles_permissions",
+      "name_tr": "Roller ve Yetkiler",
+      "name_en": "Roles & Permissions",
+      "route": "/roles",
+      "description": "RBAC Matrix UI (Admin, Muhasebeci, Operasyon, Saha Teslimat, Izleyici) with checkable granular permission rules per module."
+    },
+    {
+      "id": "module_management",
+      "name_tr": "Modül Yönetimi",
+      "name_en": "Module Management",
+      "route": "/modules",
+      "description": "Feature Toggles grid for SaaS modules (Ön Muhasebe, Menü Planlama, Saha Yoklama, E-Fatura Entegrasyonu, Stok Takibi) with status indicators."
+    },
+    {
+      "id": "document_center",
+      "name_tr": "Belge Merkezi",
+      "name_en": "Document Center",
+      "route": "/documents",
+      "description": "Grid & List views for PDF Invoices, Delivery Slips (İrsaliye), Contracts, and Hygiene Certificates with file upload dropzone and filter tags."
+    },
+    {
+      "id": "security_mfa",
+      "name_tr": "Güvenlik & MFA",
+      "name_en": "Security & MFA",
+      "route": "/security",
+      "description": "Enforce MFA for organization switch, active login sessions table with IP/device info, revocation buttons, and password policy settings."
+    },
+    {
+      "id": "audit_log",
+      "name_tr": "Audit Log (Denetim Kaydı)",
+      "name_en": "Audit Log",
+      "route": "/audit-log",
+      "description": "High-density timeline table of system actions with date filter, event severity badges (Info, Warning, Critical), actor user, IP address, and JSON payload diff drawer."
+    },
+    {
+      "id": "super_admin_tenants",
+      "name_tr": "Super Admin - Kiracı Yönetimi",
+      "name_en": "Super Admin - Tenant List",
+      "route": "/super-admin/tenants",
+      "description": "SaaS Platform Management UI listing all tenants (Ecrin Yemek, Lezzet Catering, etc.), creation wizard, subscription status (Basic/Pro/Enterprise), MRR contribution, suspend/activate controls."
+    },
+    {
+      "id": "super_admin_system",
+      "name_tr": "Super Admin - Sistem Sağlığı",
+      "name_en": "Super Admin - System Health",
+      "route": "/super-admin/system",
+      "description": "Server health metrics (FastAPI response latency, MySQL DB connections, worker jobs queue, storage utilization, active tenant metrics)."
+    }
+  ],
+  "image_urls": {
+    "tenant_logo": "https://images.unsplash.com/photo-1585842630354-c6766ebf210d?crop=entropy&cs=srgb&fm=jpg&q=85&w=200",
+    "caterer_avatar": "https://images.pexels.com/photos/12253092/pexels-photo-12253092.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+    "food_box_sample": "https://images.pexels.com/photos/29389639/pexels-photo-29389639.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+  },
+  "component_guidelines": {
+    "file_extension": ".js",
+    "shadcn_usage": "Use Shadcn primitives in src/components/ui/*.js (Button, Input, Card, Dialog, Select, Table, Badge, Tabs, DropdownMenu, Switch, Tooltip, Sheet).",
+    "tables": "Use dense layout, subtle hover states, sticky headers, multi-select checkboxes, pagination controls, and status badges.",
+    "charts": "Use Recharts (ResponsiveContainer, AreaChart, BarChart, PieChart) with custom tooltips, formatted TRY (\u20ba) currency values, and smooth animations.",
+    "modals": "Always build accessible dialogs with clear 'Vazgeç / Cancel' and 'Kaydet / Save' buttons.",
+    "toasts": "Use 'sonner' toast library for action notifications (e.g. 'Fatura başarıyla kaydedildi', 'Kullanıcı rolü güncellendi')."
+  },
+  "i18n_requirement": {
+    "default_language": "tr",
+    "supported_languages": ["tr", "en"],
+    "implementation": "Language state stored in context/React state with full dictionary coverage across all 12 screens so toggling instantly translates sidebars, buttons, tables, badges, and titles."
+  },
+  "test_attributes": {
+    "rule": "ALL interactive components, forms, buttons, table rows, tab triggers, language selectors, and modals MUST include explicit data-testid attributes in kebab-case.",
+    "examples": [
+      "data-testid='login-submit-btn'",
+      "data-testid='lang-switch-en'",
+      "data-testid='tenant-switcher-dropdown'",
+      "data-testid='mfa-otp-input'",
+      "data-testid='user-table-row-1'",
+      "data-testid='create-tenant-modal-submit'"
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Create or update React views in frontend/src/ corresponding to all 12 key pages.",
+    "Ensure dual language (TR / EN) switcher works flawlessly across all pages.",
+    "Implement Ecrin Yemek catering branding and multi-tenant switcher seamlessly.",
+    "Ensure mobile responsiveness for field delivery staff on phone screens.",
+    "Add data-testid to every clickable element and form field."
+  ]
+}
