@@ -22,6 +22,7 @@ from app.core.database import engine
 from app.core.security import limiter
 from app.models.base import Base
 from app.api import auth, tenants, users, roles, modules, documents, audit_log, super_admin
+from app.api import customers, prices, meal_entries, ledger, reports
 from fastapi import APIRouter
 
 logging.basicConfig(
@@ -124,6 +125,12 @@ api_router.include_router(modules.router, prefix="/modules", tags=["Modules"])
 api_router.include_router(documents.router, prefix="/documents", tags=["Documents"])
 api_router.include_router(audit_log.router, prefix="/audit", tags=["Audit"])
 api_router.include_router(super_admin.router, prefix="/super-admin", tags=["Super Admin"])
+# Phase 2
+api_router.include_router(customers.router, prefix="/customers", tags=["Customers"])
+api_router.include_router(prices.router, prefix="/prices", tags=["Prices"])
+api_router.include_router(meal_entries.router, prefix="/meal-entries", tags=["Meal Entries"])
+api_router.include_router(ledger.router, prefix="/ledger", tags=["Ledger"])
+api_router.include_router(reports.router, prefix="/reports", tags=["Reports"])
 
 
 @api_router.get("/")

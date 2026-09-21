@@ -75,17 +75,40 @@ Multi-tenant catering ve küçük işletme ön muhasebe SaaS platformu. Phase 1:
 - [x] BACKUP.md — yedekleme stratejileri
 - [x] .env.example — tüm değişkenler
 
-## Phase 2 — İş Modülleri (DONDURULMUŞ)
-Kullanıcı tarafından Phase 1 tamamen bitmeden başlatılmaması talep edilmiştir.
+## Phase 2 — İş Modülleri (TAMAMLANDI - 2026-09-21)
 
-- [ ] Catering / Sipariş Yönetimi
-- [ ] Cari Hesaplar
-- [ ] Fatura & İrsaliye
-- [ ] Kasa & Banka
-- [ ] Stok Yönetimi
-- [ ] Personel & Bordro
-- [ ] Mali Müşavir Merkezi
-- [ ] Raporlar
+### Backend Phase 2 (100% Tamamlandı)
+- [x] Route shadowing lint hatası düzeltildi
+- [x] Phase 2 modelleri eklendi (Customer, MealType, MealPriceVersion, MealEntryEvent, LedgerAccount, LedgerEntry)
+- [x] 5 yeni router bağlandı (customers, prices, meal_entries, ledger, reports)
+- [x] Eksik Phase 2 yetkileri eklendi, varsayılan yemek tipleri seed edildi
+- [x] Müşteri & Lokasyon CRUD API
+- [x] Tarih bazlı fiyatlandırma (KDV dahil/hariç, overlap koruması)
+- [x] Event-sourced yemek girişi (idempotency_key, atomic ledger debit)
+- [x] Günlük özet aggregation
+- [x] Müşteri cari hesap ekstresi
+- [x] Yemek raporu (PDF + Excel export via reportlab + openpyxl)
+- [x] Tenant logo upload/serve endpoint
+
+### Frontend Phase 2 (100% Tamamlandı)
+- [x] Sidebar Phase 2 linkleri (Müşteriler, Yemek Girişi, Fiyat Yönetimi, Cari Hesaplar, Raporlar)
+- [x] Customers.js, MealEntry.js, MealPrices.js, Ledger.js, Reports.js sayfaları
+- [x] TenantSettings.js — Logo/Görsel sekmesi eklendi
+
+### Test Sonuçları ✅ (iteration_4.json)
+- Backend: 23/23 PASS | Frontend: 5/5 sayfa PASS | Tenant izolasyon: PASS
+
+## Backlog / Gelecek Görevler
+
+### Yüksek Öncelik
+- [ ] Ödeme girişi (ledger'a alacak ekleme) endpoint + frontend
+- [ ] Yemek girişi düzeltme (correction events) frontend UI
+- [ ] Toplu yemek girişi (bir günde tüm müşteriler)
+- [ ] PDF raporuna tenant logosu ekleme
+
+### Sonraki Faz (Dışlanan - Phase 2 kapsamı dışında)
+- Tedarikçi defteri, stok, fatura, e-fatura, personel bordro
+
 
 ## Kritik Bilgiler
 - **Preview URL**: https://kitchen-admin-suite.preview.emergentagent.com
@@ -100,11 +123,14 @@ Kullanıcı tarafından Phase 1 tamamen bitmeden başlatılmaması talep edilmi�
 /app
 ├── backend/
 │   ├── app/
-│   │   ├── api/ (auth, tenants, users, roles, modules, documents, audit_log, super_admin)
+│   │   ├── api/ (Phase 1: auth, tenants, users, roles, modules, documents, audit_log, super_admin
+│   │   │        Phase 2: customers, prices, meal_entries, ledger, reports)
 │   │   ├── core/ (config, database, security, deps)
-│   │   ├── models/ (auth, audit, base, document, role, tenant, user)
-│   │   ├── schemas/ (auth, document, role, tenant, user)
-│   │   └── services/ (audit_service, auth_service, storage_service)
+│   │   ├── models/ (Phase 1: auth, audit, base, document, role, tenant, user
+│   │   │           Phase 2: customer, meal, ledger)
+│   │   ├── schemas/ (Phase 1: auth, document, role, tenant, user
+│   │   │            Phase 2: customer, meal, ledger, report)
+│   │   └── services/ (audit_service, auth_service, storage_service, meal_service, report_service)
 │   ├── seeds.py
 │   └── server.py
 ├── frontend/
@@ -114,6 +140,7 @@ Kullanıcı tarafından Phase 1 tamamen bitmeden başlatılmaması talep edilmi�
 │   │   ├── i18n/ (tr.js, en.js)
 │   │   └── pages/ (Login, MFA*, Dashboard, Users, Roles, Modules,
 │   │              TenantSettings, Documents, Security, AuditLog,
+│   │              Customers, MealEntry, MealPrices, Ledger, Reports,
 │   │              super-admin/Tenants, super-admin/SystemHealth)
 ├── memory/
 │   ├── PRD.md (bu dosya)
@@ -121,6 +148,7 @@ Kullanıcı tarafından Phase 1 tamamen bitmeden başlatılmaması talep edilmi�
 ```
 
 ## Değişiklik Günlüğü
+- **2026-09-21**: Phase 2 tüm iş modülleri tamamlandı (müşteri, fiyat, yemek girişi, cari hesap, raporlar, logo)
 - **2026-09-21**: Phase 1 tüm frontend sayfaları tamamlandı (Documents, Security, AuditLog, Super Admin sayfaları)
 - **2026-09-21**: Backend API, auth, MFA, seed tamamlandı
 - **2026-09-21**: MariaDB kurulumu ve supervisor konfigürasyonu

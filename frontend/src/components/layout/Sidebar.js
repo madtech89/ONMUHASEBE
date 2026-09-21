@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, FolderOpen, Building2, Users, Shield, Layers,
   Lock, ClipboardList, Crown, Activity, UtensilsCrossed, CreditCard,
-  FileText, ChevronLeft, ChevronRight,
+  FileText, ChevronLeft, ChevronRight, Tag, FileBarChart2,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -103,9 +103,11 @@ function SidebarContent({ collapsed, user, t }) {
         <NavItem to="/documents" icon={FolderOpen} label={t('nav.documents')} collapsed={collapsed} />
 
         <SectionHeader label={t('nav.accounting')} collapsed={collapsed} />
-        <NavItem to="#" icon={FileText} label="Fatura & İrsaliye" disabled collapsed={collapsed} />
-        <NavItem to="#" icon={UtensilsCrossed} label="Siparişler & Menü" disabled collapsed={collapsed} />
-        <NavItem to="#" icon={CreditCard} label="Cari Hesaplar" disabled collapsed={collapsed} />
+        <NavItem to="/customers" icon={Users} label="Müşteriler" collapsed={collapsed} />
+        <NavItem to="/meal-entry" icon={UtensilsCrossed} label="Yemek Girişi" collapsed={collapsed} />
+        <NavItem to="/prices" icon={Tag} label="Fiyat Yönetimi" collapsed={collapsed} />
+        <NavItem to="/ledger" icon={CreditCard} label="Cari Hesaplar" collapsed={collapsed} />
+        <NavItem to="/reports" icon={FileBarChart2} label="Raporlar" collapsed={collapsed} />
 
         <SectionHeader label={t('nav.organization')} collapsed={collapsed} />
         <NavItem to="/settings/tenant" icon={Building2} label={t('nav.tenantSettings')} collapsed={collapsed} />

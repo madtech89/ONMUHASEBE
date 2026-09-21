@@ -19,6 +19,12 @@ import Security from './pages/Security';
 import AuditLog from './pages/AuditLog';
 import SuperAdminTenants from './pages/super-admin/Tenants';
 import SuperAdminSystem from './pages/super-admin/SystemHealth';
+// Phase 2
+import Customers from './pages/Customers';
+import MealEntry from './pages/MealEntry';
+import MealPrices from './pages/MealPrices';
+import Ledger from './pages/Ledger';
+import Reports from './pages/Reports';
 import './App.css';
 
 function AppLayout({ children }) {
@@ -47,6 +53,12 @@ function App() {
             <Route path="/security" element={<AppLayout><Security /></AppLayout>} />
             <Route path="/audit-log" element={<AppLayout><AuditLog /></AppLayout>} />
             <Route path="/mfa-setup" element={<AppLayout><MFASetup /></AppLayout>} />
+            {/* Phase 2 */}
+            <Route path="/customers" element={<AppLayout><Customers /></AppLayout>} />
+            <Route path="/meal-entry" element={<AppLayout><MealEntry /></AppLayout>} />
+            <Route path="/prices" element={<AppLayout><MealPrices /></AppLayout>} />
+            <Route path="/ledger" element={<AppLayout><Ledger /></AppLayout>} />
+            <Route path="/reports" element={<AppLayout><Reports /></AppLayout>} />
             <Route path="/super-admin/tenants" element={
               <ProtectedRoute requireSuperAdmin><Layout><SuperAdminTenants /></Layout></ProtectedRoute>
             } />

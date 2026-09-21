@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Building2, Save } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Building2, Save, Upload, Image, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Button } from '../components/ui/button';
@@ -7,6 +7,8 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { toast } from 'sonner';
+
+const API = process.env.REACT_APP_BACKEND_URL;
 
 export default function TenantSettings() {
   const { activeTenant, api } = useAuth();
@@ -18,13 +20,19 @@ export default function TenantSettings() {
     iban: '', banka_bilgileri: '', pdf_header: '', pdf_footer: '',
   });
   const [loading, setLoading] = useState(false);
+  const [logoUrl, setLogoUrl] = useState(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const fileRef = useRef(null);
 
   useEffect(() => {
     const load = async () => {
       if (!activeTenant) return;
       try {
         const { data } = await api.get(`/api/tenants/${activeTenant.public_id}`);
-        if (data.settings) setForm(f => ({ ...f, ...data.settings }));
+        if (data.settings) {
+          setForm(f => ({ ...f, ...data.settings }));
+          if (data.settings.logo_url) setLogoUrl(`${API}${data.settings.logo_url}?t=${Date.now()}`);
+        }
       } catch {}
     };
     load();
@@ -40,6 +48,26 @@ export default function TenantSettings() {
       toast.error(err?.response?.data?.detail || 'Kayıt hatası');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    setLogoUploading(true);
+    try {
+      await api.post(`/api/tenants/${activeTenant.public_id}/logo`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setLogoUrl(`${API}/api/tenants/${activeTenant.public_id}/logo?t=${Date.now()}`);
+      toast.success('Logo yüklendi');
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Logo yükleme hatası');
+    } finally {
+      setLogoUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
     }
   };
 
@@ -65,6 +93,7 @@ export default function TenantSettings() {
         <Tabs defaultValue="general">
           <TabsList className="mb-6" data-testid="tenant-settings-tabs">
             <TabsTrigger value="general">Genel Bilgiler</TabsTrigger>
+            <TabsTrigger value="logo">Logo / Görsel</TabsTrigger>
             <TabsTrigger value="financial">Finansal</TabsTrigger>
             <TabsTrigger value="contact">İletişim</TabsTrigger>
             <TabsTrigger value="pdf">PDF Ayarları</TabsTrigger>
@@ -75,6 +104,53 @@ export default function TenantSettings() {
             {field('kisa_ad', t('tenantSettings.shortName'), 'text', 'Ecrin Yemek')}
             {field('vergi_dairesi', t('tenantSettings.taxOffice'))}
             {field('vergi_no', t('tenantSettings.taxNumber'))}
+          </TabsContent>
+
+          <TabsContent value="logo" className="space-y-6">
+            <div className="space-y-4">
+              <div>
+                <Label>Firma Logosu</Label>
+                <p className="text-xs text-muted-foreground mt-1">JPG, PNG, GIF, WebP veya SVG. Maksimum 5 MB.</p>
+              </div>
+              {/* Current logo preview */}
+              <div className="flex items-start gap-4">
+                <div className="w-32 h-32 rounded-xl border-2 border-dashed border-muted flex items-center justify-center bg-muted/20 overflow-hidden" data-testid="logo-preview">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt="Logo" className="max-w-full max-h-full object-contain p-2" />
+                  ) : (
+                    <div className="text-center text-muted-foreground p-4">
+                      <Image size={28} className="mx-auto mb-1 opacity-40" />
+                      <p className="text-xs">Logo yok</p>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                    id="logo-upload"
+                    data-testid="logo-file-input"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={logoUploading}
+                    className="gap-2"
+                    data-testid="logo-upload-btn"
+                  >
+                    <Upload size={14} />
+                    {logoUploading ? 'Yükleniyor...' : 'Logo Yükle'}
+                  </Button>
+                  {logoUrl && (
+                    <p className="text-xs text-emerald-600">Logo aktif olarak kullanımda</p>
+                  )}
+                </div>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="financial" className="space-y-4">

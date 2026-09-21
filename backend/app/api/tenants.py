@@ -1,6 +1,7 @@
 import logging
+import uuid
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Response
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -100,6 +101,77 @@ async def update_tenant_settings(
     await db.commit()
     await db.refresh(settings_obj)
     return TenantSettingsSchema.model_validate(settings_obj)
+
+
+ALLOWED_LOGO_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"}
+MAX_LOGO_SIZE = 5 * 1024 * 1024  # 5 MB
+
+
+@router.post("/{tenant_public_id}/logo")
+async def upload_tenant_logo(
+    tenant_public_id: str,
+    file: UploadFile = File(...),
+    ctx=Depends(require_permission("settings.manage")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Upload tenant logo. Stored locally, served via GET /logo endpoint."""
+    user, tenant = ctx
+    # Verify tenant ownership
+    if tenant.public_id != tenant_public_id:
+        raise HTTPException(status_code=403, detail="Erişim reddedildi")
+
+    if file.content_type not in ALLOWED_LOGO_TYPES:
+        raise HTTPException(status_code=400, detail="Desteklenmeyen dosya tipi. JPG, PNG, GIF, WebP veya SVG yükleyin.")
+
+    content = await file.read()
+    if len(content) > MAX_LOGO_SIZE:
+        raise HTTPException(status_code=400, detail="Logo boyutu 5 MB'ı geçemez")
+
+    from app.services.storage_service import storage
+    # Store with deterministic key so uploading a new one overwrites the old
+    ext = file.filename.rsplit(".", 1)[-1] if "." in (file.filename or "") else "png"
+    storage_key = f"logos/{tenant.id}/logo.{ext}"
+    await storage.store(content, storage_key)
+
+    # Update logo_url in settings
+    settings_result = await db.execute(
+        select(TenantSettings).where(TenantSettings.tenant_id == tenant.id)
+    )
+    settings_obj = settings_result.scalar_one_or_none()
+    if not settings_obj:
+        settings_obj = TenantSettings(tenant_id=tenant.id)
+        db.add(settings_obj)
+
+    logo_url = f"/api/tenants/{tenant_public_id}/logo"
+    settings_obj.logo_url = logo_url
+    await db.commit()
+
+    return {"logo_url": logo_url, "message": "Logo yüklendi"}
+
+
+@router.get("/{tenant_public_id}/logo")
+async def get_tenant_logo(
+    tenant_public_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Serve tenant logo (publicly accessible for display)."""
+    tenant_result = await db.execute(select(Tenant).where(Tenant.public_id == tenant_public_id))
+    tenant = tenant_result.scalar_one_or_none()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant bulunamadı")
+
+    from app.services.storage_service import storage
+    import os
+    # Try common extensions
+    for ext in ["png", "jpg", "jpeg", "gif", "webp", "svg"]:
+        storage_key = f"logos/{tenant.id}/logo.{ext}"
+        try:
+            content = await storage.retrieve(storage_key)
+            mime = "image/svg+xml" if ext == "svg" else f"image/{ext.replace('jpg', 'jpeg')}"
+            return Response(content=content, media_type=mime)
+        except FileNotFoundError:
+            continue
+    raise HTTPException(status_code=404, detail="Logo bulunamadı")
 
 
 @router.get("/{tenant_public_id}/modules", response_model=list[TenantModuleResponse])

@@ -50,6 +50,15 @@ PERMISSIONS = [
     ("customers.create", "Müşteri Oluştur", "customers"),
     ("customers.view", "Müşterileri Görüntüle", "customers"),
     ("customers.edit", "Müşteri Düzenle", "customers"),
+    ("customers.deactivate", "Müşteriyi Pasifleştir", "customers"),
+    # Meal Entries
+    ("meal_entries.create", "Yemek Girişi Yap", "catering"),
+    ("meal_entries.view", "Yemek Girişlerini Görüntüle", "catering"),
+    ("meal_entries.correct", "Yemek Girişi Düzelt", "catering"),
+    ("meal_entries.view_financial", "Yemek Finansallarını Gör", "catering"),
+    # Meal Prices
+    ("meal_prices.view", "Yemek Fiyatlarını Görüntüle", "catering"),
+    ("meal_prices.manage", "Yemek Fiyatlarını Yönet", "catering"),
     # Finance
     ("customer_financials.view", "Müşteri Finansallarını Gör", "finance"),
     ("ledger.view", "Defterleri Görüntüle", "finance"),
@@ -61,6 +70,7 @@ PERMISSIONS = [
     # Reports
     ("reports.financial.view", "Mali Rapor Görüntüle", "reports"),
     ("reports.view", "Raporları Görüntüle", "reports"),
+    ("reports.export", "Rapor İndir (PDF/Excel)", "reports"),
     # HR
     ("payroll.view", "Maaş Bilgilerini Görüntüle", "hr"),
     ("attendance.create", "Puantaj Girişi Yap", "hr"),
@@ -74,32 +84,39 @@ ROLES = {
         "audit.view", "modules.manage",
         "documents.upload", "documents.view", "documents.delete",
         "orders.create", "orders.view", "orders.edit",
-        "customers.create", "customers.view", "customers.edit",
+        "customers.create", "customers.view", "customers.edit", "customers.deactivate",
+        "meal_entries.create", "meal_entries.view", "meal_entries.correct", "meal_entries.view_financial",
+        "meal_prices.view", "meal_prices.manage",
         "customer_financials.view", "ledger.view",
         "payments.create", "payments.view", "payments.approve",
         "expenses.create", "expenses.view",
-        "reports.financial.view", "reports.view",
+        "reports.financial.view", "reports.view", "reports.export",
     ]),
     "muhasebe": ("Muhasebe", [
         "documents.upload", "documents.view",
         "customers.view", "customer_financials.view",
+        "meal_entries.view", "meal_entries.view_financial",
+        "meal_prices.view",
         "ledger.view", "payments.create", "payments.view",
         "expenses.create", "expenses.view",
-        "reports.financial.view", "reports.view",
+        "reports.financial.view", "reports.view", "reports.export",
     ]),
     "siparis_personeli": ("Sipariş Personeli", [
         "orders.create", "orders.view", "orders.edit",
         "customers.view", "documents.view",
+        "meal_entries.create", "meal_entries.view",
+        "meal_prices.view",
     ]),
-    "depo": ("Depo", ["orders.view", "documents.view"]),
+    "depo": ("Depo", ["orders.view", "documents.view", "meal_entries.view"]),
     "personel_yetkilisi": ("Personel/Puantaj Yetkilisi", [
         "attendance.create", "attendance.view",
         "payroll.view", "documents.view",
     ]),
     "mali_musavir": ("Mali Müşavir", [
         "documents.view", "ledger.view",
-        "reports.financial.view", "reports.view",
+        "reports.financial.view", "reports.view", "reports.export",
         "customer_financials.view",
+        "meal_entries.view", "meal_entries.view_financial",
     ]),
 }
 
@@ -235,7 +252,27 @@ async def seed_database(db):
 
     await db.commit()
 
-    # 9. Write test credentials
+    # 9. Seed default MealTypes (system-wide, tenant_id=NULL)
+    from app.models.meal import MealType
+    DEFAULT_MEAL_TYPES = [
+        ("kahvalti", "Kahvaltı", "Breakfast", 1),
+        ("ogle", "Öğle Yemeği", "Lunch", 2),
+        ("aksam", "Akşam Yemeği", "Dinner", 3),
+        ("ara_ogun", "Ara Öğün", "Snack", 4),
+        ("ikindi", "İkindi", "Afternoon Break", 5),
+    ]
+    for code, name_tr, name_en, sort_order in DEFAULT_MEAL_TYPES:
+        mt_result = await db.execute(
+            select(MealType).where(MealType.code == code, MealType.tenant_id.is_(None))
+        )
+        if not mt_result.scalar_one_or_none():
+            db.add(MealType(
+                code=code, name_tr=name_tr, name_en=name_en,
+                sort_order=sort_order, is_active=True, tenant_id=None,
+            ))
+    await db.commit()
+
+    # 10. Write test credentials
     _write_credentials(admin_email, admin_password, tenant)
     logger.info("Seed complete")
 
