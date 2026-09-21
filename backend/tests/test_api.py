@@ -3,7 +3,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://kitchen-admin-suite.preview.emergentagent.com').rstrip('/')
 TENANT_ID = "c901a226-260a-4ee4-a486-05eb01b76411"
 EMAIL = "furkanafsin73@gmail.com"
 PASSWORD = "JlMykl5STjjeH_eXxjZkCQ"

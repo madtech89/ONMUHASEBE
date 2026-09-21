@@ -29,7 +29,6 @@ class AssignPermissionsRequest(BaseModel):
 
 
 class AssignRoleRequest(BaseModel):
-    user_public_id: str
     role_id: int
 
 

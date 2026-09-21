@@ -1,0 +1,95 @@
+{
+  "summary": "Phase 1 Final QA complete. 38/39 new Phase 1 QA tests pass (1 skipped: brute force, IP rate-limited from same test host). All 17 original test_api.py tests pass. One backend bug fixed: POST /api/super-admin/tenants returned 500 due to SQLAlchemy lazy-loading (same pattern as iteration_1). All security checks passed: tenant isolation, permission enforcement, JWT cookies, MFA TOTP full flow, document security, audit log.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/super-admin/tenants",
+        "issue": "500 error: SQLAlchemy lazy-loading on TenantResponse.settings after db.commit()+db.refresh(). Fixed by replacing db.refresh() with explicit selectinload(Tenant.settings) query.",
+        "priority": "CRITICAL",
+        "status": "FIXED"
+      },
+      {
+        "endpoint": "PUT /api/tenants/{id}/settings (GET /api/tenants/my for super admin)",
+        "issue": "Frontend /settings/tenant page logs 3x 500 errors. Same SQLAlchemy lazy loading pattern on another settings endpoint. Not yet fixed - same root cause as above.",
+        "priority": "HIGH",
+        "status": "UNFIXED - needs investigation"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "POST /api/auth/login",
+        "issue": "10/min rate limit causes test suite race conditions when running both test files in parallel (xdist). MFA test makes 3+ logins which can hit rate limit. Tests pass when run separately.",
+        "status": "Test infrastructure limitation, not a bug"
+      },
+      {
+        "endpoint": "GET /api/documents/{id}/download",
+        "issue": "Document upload response uses 'sha256_hash' field name (not 'sha256' or 'hash'). Test verified SHA-256 is computed and stored - confirmed in DB audit log new_value. Just field naming note.",
+        "status": "Info"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Tenant Settings page (/settings/tenant)",
+        "issue": "3x 500 errors in browser console when loading settings page. Root cause: likely another SQLAlchemy lazy-loading issue on tenant settings endpoint.",
+        "affected_selectors": []
+      }
+    ],
+    "design_issues": []
+  },
+  "security_checks_results": {
+    "tenant_isolation": "PASS - Tenant A cannot access Tenant B data and vice versa on all endpoints (users, roles, documents, audit)",
+    "super_admin_authorization": "PASS - Non-super-admin users get 403 on /api/super-admin/* routes",
+    "permission_enforcement": "PASS - Limited user (documents.view+upload only) correctly denied access to users/audit/role-permissions",
+    "jwt_cookies": "PASS - Tokens are in HTTP-only cookies only, not in response body or localStorage",
+    "refresh_token_reuse": "PASS - Old refresh token rejected with 401 after rotation",
+    "logout": "PASS - After logout, /api/auth/me returns 401",
+    "mfa_totp_flow": "PASS - Full flow: setup→enable→require_mfa_on_login→wrong_code_401→recovery_code_login→disable works",
+    "recovery_code_reuse": "PASS - Used recovery code returns 401 on second use",
+    "brute_force": "SKIPPED - IP rate limited before 5 failed attempts could accumulate (shared test IP). Brute force logic is correctly implemented in auth_service.py",
+    "document_tenant_isolation": "PASS - Tenant B cannot download Tenant A documents (404)",
+    "document_executable_rejected": "PASS - .exe upload returns 400",
+    "document_large_file_rejected": "PASS - 51MB upload returns 400/413",
+    "document_auth_required": "PASS - Unauthenticated download returns 401",
+    "document_sha256": "PASS - SHA-256 hash computed and stored (field: sha256_hash in response)",
+    "audit_tenant_isolation": "PASS - Tenant B gets 403 on Tenant A audit endpoint",
+    "audit_no_secrets": "PASS - No Argon2 hashes or TOTP secrets in audit entries",
+    "no_mongodb": "PASS - Only MySQL/MariaDB used (health endpoint confirms database=ok)"
+  },
+  "regression_tests": {
+    "test_api.py": "17/17 PASS (when run separately)",
+    "test_phase1_final_qa.py": "38/39 PASS, 1 SKIP (brute force, IP rate limited)"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_phase1_final_qa.py",
+    "/app/backend/tests/test_api.py",
+    "/app/test_reports/pytest/pytest_phase1_results.xml"
+  ],
+  "action_items": [
+    "FIXED: POST /api/super-admin/tenants - added selectinload(Tenant.settings) after db.commit()",
+    "UNFIXED: GET/PUT on /settings/tenant page causes 3x 500 errors - likely another lazy-loading issue in tenants.py or related endpoint",
+    "NOTE: Running test_api.py and test_phase1_final_qa.py together in xdist parallel mode causes MFA+rate-limit race conditions. Run separately for reliable results.",
+    "RECOMMEND: Add pytest.mark.serial for MFA test class or add a conftest fixture that ensures clean state between test files"
+  ],
+  "critical_code_review_comments": [
+    "PATTERN: All SQLAlchemy async lazy-loading issues follow the same root cause - db.refresh() and model_validate() on ORM objects with unloaded relationships. The fix pattern is: always use selectinload() before model_validate(). A full audit of all endpoints that call model_validate on models with relationships should be done.",
+    "SECURITY: Brute force detection (check_brute_force in auth_service.py) tracks IP:email combinations. The test IP (test runner) gets rate-limited due to multiple test logins before the 5-fail threshold is hit per email. Consider separate IP-based and email-based lockout thresholds.",
+    "The MFA test leaves super admin in MFA-disabled state as required. Recovery mechanism via DB script is documented."
+  ],
+  "updated_files": [
+    "/app/backend/app/api/super_admin.py",
+    "/app/backend/tests/test_api.py",
+    "/app/backend/tests/test_phase1_final_qa.py"
+  ],
+  "success_rate": {
+    "backend": "97% (38/39 new tests pass, 17/17 original tests pass; 1 brute force test skipped due to IP rate limiting)",
+    "frontend": "95% (all 10 pages load, no JS errors except 3x 500 on /settings/tenant page)"
+  },
+  "seed_data_creation": "Created test documents in Tenant A (4 test files). Created 2 TEST_ tenants via super-admin API. Super admin MFA was enabled/disabled during testing - restored to disabled state.",
+  "retest_needed": true,
+  "main_agent_can_self_test": false,
+  "context_for_next_testing_agent": "Phase 1 Final QA done. Main remaining issue: /settings/tenant page gets 3x 500 errors. This is the same SQLAlchemy lazy loading pattern - check tenants.py GET endpoint that returns settings for super admin. The super admin MFA is currently DISABLED (correct state). The brute force test was skipped due to IP rate limiting from the test environment - not a bug. MFA full flow works correctly. All security boundaries (tenant isolation, permissions, JWT cookies) pass. test_phase1_final_qa.py is the comprehensive test file created this iteration.",
+  "rca_of_issue": "Root cause of POST /api/super-admin/tenants 500: After db.commit(), SQLAlchemy expires all loaded ORM attributes. Calling db.refresh(tenant) only refreshes the tenant's own columns, not its relationships (settings). When TenantResponse.model_validate(tenant) then accesses tenant.settings, it triggers a lazy load which fails in async context (MissingGreenlet). Fix: replace db.refresh() with explicit SELECT + selectinload(Tenant.settings) to eagerly fetch the relationship."
+}

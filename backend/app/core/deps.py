@@ -100,20 +100,22 @@ async def get_tenant_context(
         )
 
     # Resolve tenant (by public_id UUID or numeric id)
+    from sqlalchemy.orm import selectinload
+    from app.models.tenant import TenantSettings as _TenantSettings  # noqa
     try:
         if "-" in tenant_id_str:  # UUID format
             result = await db.execute(
                 select(Tenant).where(
                     Tenant.public_id == tenant_id_str,
                     Tenant.status == "active",
-                )
+                ).options(selectinload(Tenant.settings))
             )
         else:
             result = await db.execute(
                 select(Tenant).where(
                     Tenant.id == int(tenant_id_str),
                     Tenant.status == "active",
-                )
+                ).options(selectinload(Tenant.settings))
             )
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid tenant ID format")

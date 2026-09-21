@@ -76,7 +76,11 @@ async def create_tenant(
         new_value={"name": body.name}, severity="info"
     )
     await db.commit()
-    await db.refresh(tenant)
+    # Reload tenant with settings eagerly to avoid lazy-loading issue
+    result2 = await db.execute(
+        select(Tenant).where(Tenant.id == tenant.id).options(selectinload(Tenant.settings))
+    )
+    tenant = result2.scalar_one()
     return TenantResponse.model_validate(tenant)
 
 

@@ -52,6 +52,14 @@ async def get_tenant(
     db: AsyncSession = Depends(get_db),
 ):
     user, tenant = ctx
+    # Re-fetch with settings eagerly loaded to avoid async lazy-load error
+    result = await db.execute(
+        select(Tenant).where(Tenant.id == tenant.id)
+        .options(selectinload(Tenant.settings))
+    )
+    tenant = result.scalar_one_or_none()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
     tr = TenantResponse.model_validate(tenant)
     if tenant.settings:
         tr.settings = TenantSettingsSchema.model_validate(tenant.settings)
@@ -66,8 +74,14 @@ async def update_tenant_settings(
     db: AsyncSession = Depends(get_db),
 ):
     user, tenant = ctx
-    if tenant.settings:
-        settings_obj = tenant.settings
+
+    # Fetch settings separately to avoid lazy-loading in async context
+    settings_result = await db.execute(
+        select(TenantSettings).where(TenantSettings.tenant_id == tenant.id)
+    )
+    settings_obj = settings_result.scalar_one_or_none()
+
+    if settings_obj:
         for field, value in body.model_dump(exclude_none=True).items():
             setattr(settings_obj, field, value)
     else:

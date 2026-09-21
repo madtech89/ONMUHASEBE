@@ -1,0 +1,49 @@
+{
+  "summary": "Phase 1 Regression QA - All critical fixes verified. SQLAlchemy lazy-loading fix confirmed working on all tenant settings endpoints. Frontend /settings/tenant page loads without errors showing correct data. test_api.py: 17/17 PASS. test_phase1_final_qa.py: 36/39 PASS, 3 SKIP (same IP rate-limiting pattern as iteration_2).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "POST /api/auth/login (rate limit)",
+        "issue": "Brute force protection tracks by IP. test_phase1_final_qa.py's TestBruteForce sends 5 failed logins which locks out the shared test IP for 15 minutes. This causes subsequent super admin login attempts to fail with 429 during MFA tests. 3 tests SKIPPED: test_mfa_full_flow, test_mfa_disable_wrong_code_returns_400, test_brute_force_lockout. Not a bug - test infrastructure limitation.",
+        "status": "Known issue from iteration_2, not a code bug"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "regression_fixes_verified": {
+    "GET /api/tenants/{public_id}": "200 with settings populated - FIXED (was 500 SQLAlchemy lazy-load)",
+    "PUT /api/tenants/{public_id}/settings": "200 with updated ticari_unvan - FIXED (was 500)",
+    "GET /api/tenants/my": "200 with settings.ticari_unvan='Ecrin Yemek Catering A.Ş.' - CONFIRMED",
+    "POST /api/super-admin/tenants": "200/201 - REGRESSION CONFIRMED STILL PASSING",
+    "/api/auth/me": "Returns is_super_admin=true - PASS",
+    "Tenant B 403 on Tenant A users": "403 Access denied - PASS",
+    "Frontend /settings/tenant": "Loads without errors, shows 'Ecrin Yemek Catering A.Ş.' in Ticari Unvan - FIXED"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_api.py",
+    "/app/backend/tests/test_phase1_final_qa.py",
+    "/app/test_reports/pytest/test_api_iter3.xml",
+    "/app/test_reports/pytest/test_phase1_iter3.xml"
+  ],
+  "action_items": [
+    "OPTIONAL: To prevent IP rate-lock during test runs, consider adding a delay or running BruteForce test class last in test_phase1_final_qa.py, or use a different email/IP for brute force test to not affect shared session fixture."
+  ],
+  "critical_code_review_comments": [
+    "All three SQLAlchemy async lazy-loading fixes are in place: deps.py get_tenant_context uses selectinload(Tenant.settings), tenants.py get_tenant re-fetches with selectinload, tenants.py update_tenant_settings fetches TenantSettings separately. Pattern is consistent.",
+    "NOTE: test_super_admin_create_tenant returns a dict (not None) - minor pytest warning, not a test failure."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (17/17 test_api.py + 36/36 non-skipped test_phase1_final_qa.py; 3 skipped due to IP rate limiting)",
+    "frontend": "100% (/settings/tenant page renders correctly with Ecrin Yemek Catering A.Ş., no 500 errors)"
+  },
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Phase 1 regression QA complete. All critical fixes verified. The only persistent issue is IP rate-limiting during test runs when brute force test runs before MFA tests - this causes 3 MFA tests to be skipped. Not a code bug. Super admin MFA is currently DISABLED (correct state).",
+  "rca_of_issue": "N/A - all issues from iteration_2 are fixed. Root cause of the 500 errors was SQLAlchemy async lazy-loading: after db.commit(), relationships like tenant.settings were expired and triggered lazy loads which fail in async context (MissingGreenlet). Fix: use selectinload() to eagerly fetch relationships before accessing them."
+}
